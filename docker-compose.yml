@@ -1,0 +1,60 @@
+services:
+  freescout-db:
+    image: postgres:15-alpine
+    container_name: freescout-db
+    environment:
+      POSTGRES_DB: freescout
+      POSTGRES_USER: freescout
+      POSTGRES_PASSWORD: FsDemo2026!
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - freescout-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U freescout"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  freescout-app:
+    image: tiredofit/freescout:latest
+    container_name: freescout-app
+    environment:
+      TIMEZONE: America/Sao_Paulo
+      DB_TYPE: pgsql
+      DB_HOST: freescout-db
+      DB_PORT: "5432"
+      DB_NAME: freescout
+      DB_USER: freescout
+      DB_PASS: FsDemo2026!
+      SITE_URL: http://localhost
+      ADMIN_EMAIL: admin@freescout.demo
+      ADMIN_PASS: Admin@2026
+      ADMIN_FIRST_NAME: Mateus
+      ADMIN_LAST_NAME: Santos
+      ENABLE_SSL_PROXY: "TRUE"
+      ENABLE_AUTO_UPDATE: "FALSE"
+      DISPLAY_ERRORS: "TRUE"
+      APPLICATION_NAME: "FreeScout Demo"
+    volumes:
+      - freescout_data:/data
+      - freescout_logs:/www/logs
+      - ./assets/custom:/assets/custom
+    ports:
+      - "80:80"
+    depends_on:
+      freescout-db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - freescout-net
+
+volumes:
+  postgres_data:
+  freescout_data:
+  freescout_logs:
+
+networks:
+  freescout-net:
+    driver: bridge

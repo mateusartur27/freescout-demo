@@ -1,0 +1,12 @@
+# Docker volumes (dados locais)
+postgres_data/
+freescout_data/
+freescout_logs/
+
+# Ambiente
+.env
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store

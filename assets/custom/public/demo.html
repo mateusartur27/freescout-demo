@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreeScout Helpdesk — Demonstração</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 780px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 36px 40px 28px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .body {
+            padding: 32px 40px 40px;
+        }
+
+        .name-section {
+            margin-bottom: 28px;
+        }
+
+        .name-section label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            color: #444;
+        }
+
+        .name-section input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        .name-section input:focus {
+            border-color: #1a73e8;
+        }
+
+        .name-section .hint {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 6px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .cards { grid-template-columns: 1fr; }
+            .header { padding: 28px 24px 22px; }
+            .body { padding: 24px; }
+        }
+
+        .card {
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            border-color: #1a73e8;
+            box-shadow: 0 4px 16px rgba(26,115,232,0.12);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .card h2 {
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+            color: #222;
+        }
+
+        .card p {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 12px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        .btn-admin {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+        }
+
+        .btn-user {
+            background: linear-gradient(135deg, #34a853, #1b7a34);
+        }
+
+        .btn:disabled {
+            background: #ccc !important;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn:not(:disabled):hover {
+            opacity: 0.9;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 0 40px 28px;
+            font-size: 0.78rem;
+            color: #aaa;
+        }
+
+        .footer a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>FreeScout Helpdesk</h1>
+            <p>Sistema de atendimento ao cliente — open-source, auto-hospedado</p>
+            <span class="badge">DEMONSTRAÇÃO — Trabalho Acadêmico</span>
+        </div>
+
+        <div class="body">
+            <div class="name-section">
+                <label for="userName">Seu nome</label>
+                <input type="text" id="userName" placeholder="Digite seu nome para prosseguir..." autocomplete="off">
+                <p class="hint">Obrigatório para habilitar o acesso</p>
+            </div>
+
+            <div class="cards">
+                <!-- Card Admin -->
+                <div class="card">
+                    <div class="card-icon">🛡️</div>
+                    <h2>Administrador</h2>
+                    <p>Acesso completo ao sistema: gerenciar usuários, mailboxes, configurações e visualizar todos os tickets.</p>
+                    <button class="btn btn-admin" id="btnAdmin" disabled onclick="enterAs('admin')">
+                        Entrar como Administrador
+                    </button>
+                </div>
+
+                <!-- Card Usuário -->
+                <div class="card">
+                    <div class="card-icon">👤</div>
+                    <h2>Usuário</h2>
+                    <p>Visualizar e responder tickets de suporte, sem acesso a configurações do sistema.</p>
+                    <button class="btn btn-user" id="btnUser" disabled onclick="enterAs('user')">
+                        Entrar como Usuário
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Powered by <a href="https://freescout.net" target="_blank" rel="noopener">FreeScout</a>
+            — Free, open-source help desk &amp; shared mailbox
+        </div>
+    </div>
+
+    <script>
+        const nameInput = document.getElementById('userName');
+        const btnAdmin = document.getElementById('btnAdmin');
+        const btnUser = document.getElementById('btnUser');
+
+        nameInput.addEventListener('input', function () {
+            const hasName = this.value.trim().length >= 2;
+            btnAdmin.disabled = !hasName;
+            btnUser.disabled = !hasName;
+        });
+
+        const CREDS = {
+            admin: { email: 'admin@freescout.demo', password: 'Admin@2026' },
+            user:  { email: 'usuario@freescout.demo', password: 'User@2026' }
+        };
+
+        async function enterAs(role) {
+            const name = nameInput.value.trim();
+            if (name.length < 2) return;
+
+            btnAdmin.disabled = true;
+            btnUser.disabled = true;
+
+            try {
+                // Buscar token CSRF da página de login
+                const resp = await fetch('/login', { credentials: 'include' });
+                const html = await resp.text();
+                const match = html.match(/name="_token"\s+value="([^"]+)"/);
+                if (!match) throw new Error('token not found');
+
+                // Submeter formulário de login na mesma aba
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/login';
+
+                [['_token', match[1]], ['email', CREDS[role].email], ['password', CREDS[role].password]]
+                    .forEach(([n, v]) => {
+                        const i = document.createElement('input');
+                        i.type = 'hidden'; i.name = n; i.value = v;
+                        form.appendChild(i);
+                    });
+
+                document.body.appendChild(form);
+                form.submit();
+
+            } catch(e) {
+                // Fallback: abrir login manualmente
+                window.location.href = '/login';
+            }
+        }
+    </script>
+</body>
+</html>
