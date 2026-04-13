@@ -35,8 +35,9 @@ services:
       ADMIN_LAST_NAME: Santos
       ENABLE_SSL_PROXY: "TRUE"
       ENABLE_AUTO_UPDATE: "FALSE"
-      DISPLAY_ERRORS: "TRUE"
+      DISPLAY_ERRORS: "FALSE"
       APPLICATION_NAME: "FreeScout Demo"
+      APP_LOCALE: "pt-BR"
     volumes:
       - freescout_data:/data
       - freescout_logs:/www/logs

@@ -230,6 +230,18 @@
             margin-bottom: 12px;
             text-decoration: underline;
         }
+
+        .spinner {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -260,41 +272,12 @@
 
                 <!-- Card Usuário -->
                 <div class="card" id="cardUser">
-                    <!-- Visão inicial -->
-                    <div id="userInitial">
-                        <div class="card-icon">🎫</div>
-                        <h2>Usuário</h2>
-                        <p>Abra um chamado de suporte. Sua solicitação ficará visível para o administrador responder.</p>
-                        <button class="btn btn-user" id="btnUser" disabled onclick="showTicketForm()">
-                            Abrir Chamado
-                        </button>
-                    </div>
-
-                    <!-- Formulário de chamado -->
-                    <div class="ticket-form" id="ticketForm">
-                        <button class="btn-back" onclick="hideTicketForm()">← Voltar</button>
-                        <div class="ticket-intro">
-                            <p>Descreva sua solicitação e envie. O chamado aparecerá no painel do administrador.</p>
-                        </div>
-                        <div class="form-group">
-                            <label>Assunto</label>
-                            <input type="text" id="ticketSubject" placeholder="Ex: Problema com login" maxlength="100">
-                        </div>
-                        <div class="form-group">
-                            <label>Mensagem</label>
-                            <textarea id="ticketBody" rows="4" placeholder="Descreva o problema ou solicitação..."></textarea>
-                        </div>
-                        <button class="btn btn-user" id="btnSubmit" onclick="submitTicket()">
-                            Enviar Chamado
-                        </button>
-                    </div>
-
-                    <!-- Confirmação de envio -->
-                    <div class="success-msg" id="ticketSuccess">
-                        <div class="check">✅</div>
-                        <p id="successText">Chamado enviado!</p>
-                        <small>Visível no painel do administrador agora.</small>
-                    </div>
+                    <div class="card-icon">🎫</div>
+                    <h2>Usuário</h2>
+                    <p>Acesse o sistema, visualize e responda chamados de suporte atribuídos a você.</p>
+                    <button class="btn btn-user" id="btnUser" disabled onclick="enterAsUser()">
+                        Entrar como Usuário
+                    </button>
                 </div>
             </div>
         </div>
@@ -318,79 +301,52 @@
 
         const ADMIN_CREDS = { email: 'admin@freescout.demo', password: 'Admin@2026' };
 
+        // Faz login automático via CSRF + form POST
+        async function autoLogin(email, password) {
+            const resp = await fetch('/login', { credentials: 'include' });
+            const html = await resp.text();
+            const match = html.match(/name="_token"\s+value="([^"]+)"/);
+            if (!match) throw new Error('token não encontrado');
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/login';
+            [['_token', match[1]], ['email', email], ['password', password]].forEach(([n, v]) => {
+                const i = document.createElement('input');
+                i.type = 'hidden'; i.name = n; i.value = v;
+                form.appendChild(i);
+            });
+            document.body.appendChild(form);
+            form.submit();
+        }
+
         async function enterAs(role) {
             const name = nameInput.value.trim();
             if (name.length < 2) return;
             btnAdmin.disabled = true;
+            btnAdmin.innerHTML = '<span class="spinner"></span>Entrando...';
             try {
-                const resp = await fetch('/login', { credentials: 'include' });
-                const html = await resp.text();
-                const match = html.match(/name="_token"\s+value="([^"]+)"/);
-                if (!match) throw new Error('no token');
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/login';
-                [['_token', match[1]], ['email', ADMIN_CREDS.email], ['password', ADMIN_CREDS.password]]
-                    .forEach(([n, v]) => {
-                        const i = document.createElement('input');
-                        i.type = 'hidden'; i.name = n; i.value = v;
-                        form.appendChild(i);
-                    });
-                document.body.appendChild(form);
-                form.submit();
+                await autoLogin(ADMIN_CREDS.email, ADMIN_CREDS.password);
             } catch(e) {
                 window.location.href = '/login';
             }
         }
 
-        function showTicketForm() {
-            document.getElementById('userInitial').style.display = 'none';
-            document.getElementById('ticketForm').classList.add('visible');
-            document.getElementById('ticketSubject').focus();
-        }
-
-        function hideTicketForm() {
-            document.getElementById('userInitial').style.display = 'block';
-            document.getElementById('ticketForm').classList.remove('visible');
-        }
-
-        async function submitTicket() {
-            const name    = nameInput.value.trim();
-            const subject = document.getElementById('ticketSubject').value.trim();
-            const body    = document.getElementById('ticketBody').value.trim();
-
-            if (!subject || !body) {
-                alert('Preencha o assunto e a mensagem.');
-                return;
-            }
-
-            const btn = document.getElementById('btnSubmit');
-            btn.disabled = true;
-            btn.textContent = 'Enviando...';
-
+        async function enterAsUser() {
+            const name = nameInput.value.trim();
+            if (name.length < 2) return;
+            btnUser.disabled = true;
+            btnUser.innerHTML = '<span class="spinner"></span>Entrando...';
             try {
                 const data = new FormData();
                 data.append('name', name);
-                data.append('subject', subject);
-                data.append('body', body);
-
-                const resp = await fetch('/abrir-chamado.php', { method: 'POST', body: data });
+                const resp = await fetch('/fazer-login.php', { method: 'POST', body: data });
                 const json = await resp.json();
-
-                if (json.success) {
-                    document.getElementById('ticketForm').classList.remove('visible');
-                    const s = document.getElementById('ticketSuccess');
-                    document.getElementById('successText').textContent = `Chamado #${json.ticket} enviado!`;
-                    s.style.display = 'block';
-                } else {
-                    alert('Erro: ' + (json.error || 'Tente novamente.'));
-                    btn.disabled = false;
-                    btn.textContent = 'Enviar Chamado';
-                }
+                if (!json.success) throw new Error(json.error || 'Erro desconhecido');
+                await autoLogin(json.email, json.password);
             } catch(e) {
-                alert('Erro ao enviar. Tente novamente.');
-                btn.disabled = false;
-                btn.textContent = 'Enviar Chamado';
+                alert('Erro ao entrar: ' + e.message);
+                btnUser.disabled = false;
+                btnUser.textContent = 'Entrar como Usuário';
             }
         }
     </script>
