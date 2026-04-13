@@ -77,6 +77,13 @@ if (!$userId) {
          VALUES (1, ?, 2, false, false)"
     );
     $stmt->execute([$userId]);
+
+    // Cria pastas pessoais Mine (type=20) e Starred (type=25) para o novo agente
+    $stmt = $pdo->prepare(
+        "INSERT INTO folders (mailbox_id, user_id, type, total_count, active_count)
+         VALUES (1, ?, 20, 0, 0), (1, ?, 25, 0, 0)"
+    );
+    $stmt->execute([$userId, $userId]);
 }
 
 echo json_encode(['success' => true, 'email' => $email, 'password' => $demoPassword]);
