@@ -180,6 +180,56 @@
             color: #1a73e8;
             text-decoration: none;
         }
+
+        /* Formulário de chamado */
+        .ticket-form { display: none; text-align: left; }
+        .ticket-form.visible { display: block; }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+            resize: vertical;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus { border-color: #34a853; }
+
+        .ticket-intro { margin-bottom: 14px; }
+        .ticket-intro p { font-size: 0.85rem; color: #666; line-height: 1.5; }
+
+        .success-msg {
+            display: none;
+            text-align: center;
+            padding: 12px 0 4px;
+        }
+        .success-msg .check { font-size: 2rem; }
+        .success-msg p { font-size: 0.9rem; color: #34a853; font-weight: 600; margin-top: 6px; }
+        .success-msg small { font-size: 0.8rem; color: #888; }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 0.78rem;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 12px;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -209,13 +259,42 @@
                 </div>
 
                 <!-- Card Usuário -->
-                <div class="card">
-                    <div class="card-icon">👤</div>
-                    <h2>Usuário</h2>
-                    <p>Visualizar e responder tickets de suporte, sem acesso a configurações do sistema.</p>
-                    <button class="btn btn-user" id="btnUser" disabled onclick="enterAs('user')">
-                        Entrar como Usuário
-                    </button>
+                <div class="card" id="cardUser">
+                    <!-- Visão inicial -->
+                    <div id="userInitial">
+                        <div class="card-icon">🎫</div>
+                        <h2>Usuário</h2>
+                        <p>Abra um chamado de suporte. Sua solicitação ficará visível para o administrador responder.</p>
+                        <button class="btn btn-user" id="btnUser" disabled onclick="showTicketForm()">
+                            Abrir Chamado
+                        </button>
+                    </div>
+
+                    <!-- Formulário de chamado -->
+                    <div class="ticket-form" id="ticketForm">
+                        <button class="btn-back" onclick="hideTicketForm()">← Voltar</button>
+                        <div class="ticket-intro">
+                            <p>Descreva sua solicitação e envie. O chamado aparecerá no painel do administrador.</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Assunto</label>
+                            <input type="text" id="ticketSubject" placeholder="Ex: Problema com login" maxlength="100">
+                        </div>
+                        <div class="form-group">
+                            <label>Mensagem</label>
+                            <textarea id="ticketBody" rows="4" placeholder="Descreva o problema ou solicitação..."></textarea>
+                        </div>
+                        <button class="btn btn-user" id="btnSubmit" onclick="submitTicket()">
+                            Enviar Chamado
+                        </button>
+                    </div>
+
+                    <!-- Confirmação de envio -->
+                    <div class="success-msg" id="ticketSuccess">
+                        <div class="check">✅</div>
+                        <p id="successText">Chamado enviado!</p>
+                        <small>Visível no painel do administrador agora.</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -228,52 +307,90 @@
 
     <script>
         const nameInput = document.getElementById('userName');
-        const btnAdmin = document.getElementById('btnAdmin');
-        const btnUser = document.getElementById('btnUser');
+        const btnAdmin  = document.getElementById('btnAdmin');
+        const btnUser   = document.getElementById('btnUser');
 
         nameInput.addEventListener('input', function () {
             const hasName = this.value.trim().length >= 2;
             btnAdmin.disabled = !hasName;
-            btnUser.disabled = !hasName;
+            btnUser.disabled  = !hasName;
         });
 
-        const CREDS = {
-            admin: { email: 'admin@freescout.demo', password: 'Admin@2026' },
-            user:  { email: 'usuario@freescout.demo', password: 'User@2026' }
-        };
+        const ADMIN_CREDS = { email: 'admin@freescout.demo', password: 'Admin@2026' };
 
         async function enterAs(role) {
             const name = nameInput.value.trim();
             if (name.length < 2) return;
-
             btnAdmin.disabled = true;
-            btnUser.disabled = true;
-
             try {
-                // Buscar token CSRF da página de login
                 const resp = await fetch('/login', { credentials: 'include' });
                 const html = await resp.text();
                 const match = html.match(/name="_token"\s+value="([^"]+)"/);
-                if (!match) throw new Error('token not found');
-
-                // Submeter formulário de login na mesma aba
+                if (!match) throw new Error('no token');
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '/login';
-
-                [['_token', match[1]], ['email', CREDS[role].email], ['password', CREDS[role].password]]
+                [['_token', match[1]], ['email', ADMIN_CREDS.email], ['password', ADMIN_CREDS.password]]
                     .forEach(([n, v]) => {
                         const i = document.createElement('input');
                         i.type = 'hidden'; i.name = n; i.value = v;
                         form.appendChild(i);
                     });
-
                 document.body.appendChild(form);
                 form.submit();
-
             } catch(e) {
-                // Fallback: abrir login manualmente
                 window.location.href = '/login';
+            }
+        }
+
+        function showTicketForm() {
+            document.getElementById('userInitial').style.display = 'none';
+            document.getElementById('ticketForm').classList.add('visible');
+            document.getElementById('ticketSubject').focus();
+        }
+
+        function hideTicketForm() {
+            document.getElementById('userInitial').style.display = 'block';
+            document.getElementById('ticketForm').classList.remove('visible');
+        }
+
+        async function submitTicket() {
+            const name    = nameInput.value.trim();
+            const subject = document.getElementById('ticketSubject').value.trim();
+            const body    = document.getElementById('ticketBody').value.trim();
+
+            if (!subject || !body) {
+                alert('Preencha o assunto e a mensagem.');
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+
+            try {
+                const data = new FormData();
+                data.append('name', name);
+                data.append('subject', subject);
+                data.append('body', body);
+
+                const resp = await fetch('/abrir-chamado.php', { method: 'POST', body: data });
+                const json = await resp.json();
+
+                if (json.success) {
+                    document.getElementById('ticketForm').classList.remove('visible');
+                    const s = document.getElementById('ticketSuccess');
+                    document.getElementById('successText').textContent = `Chamado #${json.ticket} enviado!`;
+                    s.style.display = 'block';
+                } else {
+                    alert('Erro: ' + (json.error || 'Tente novamente.'));
+                    btn.disabled = false;
+                    btn.textContent = 'Enviar Chamado';
+                }
+            } catch(e) {
+                alert('Erro ao enviar. Tente novamente.');
+                btn.disabled = false;
+                btn.textContent = 'Enviar Chamado';
             }
         }
     </script>
